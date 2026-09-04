@@ -45,21 +45,42 @@ def cmd_profile(args):
 
 def cmd_train(args):
     """Train a QSAR model from a CSV file."""
-    if not args:
-        print("Usage: medchem train <data.csv> [--model-type random_forest|linear|ridge]")
+    import argparse
+    parser = argparse.ArgumentParser(
+        prog="medchem train",
+        description="Train a QSAR model from a CSV file containing SMILES and Activity columns."
+    )
+    parser.add_argument("csv_path", help="Path to training CSV file")
+    parser.add_argument(
+        "--model", "--model-type", "-m",
+        dest="model_type",
+        choices=["random_forest", "random-forest", "rf", "linear", "ridge"],
+        default="random_forest",
+        help="Algorithm to train: random_forest (default), linear, or ridge"
+    )
+
+    if not args or args[0] in ("-h", "--help"):
+        parser.print_help()
         return
+
+    try:
+        parsed_args = parser.parse_args(args)
+    except SystemExit:
+        return
+
     from medchem.qsar_model import train_model
 
-    csv_path = args[0]
-    model_type = 'random_forest'
-
-    # Parse optional flags
-    for i, arg in enumerate(args[1:], 1):
-        if arg == '--model-type' and i + 1 < len(args):
-            model_type = args[i + 1]
+    csv_path = parsed_args.csv_path
+    model_type = parsed_args.model_type
+    if model_type in ("random-forest", "rf"):
+        model_type = "random_forest"
 
     print(f"\n  Training {model_type} model from '{csv_path}'...")
-    result = train_model(csv_path, model_type=model_type)
+    try:
+        result = train_model(csv_path, model_type=model_type)
+    except Exception as e:
+        print(f"  ERROR: Failed to train model: {e}")
+        return
 
     print(f"\n  === Training Results ===")
     print(f"  Model type:    {result['model_type']}")
@@ -72,9 +93,18 @@ def cmd_train(args):
     if result.get('feature_importance'):
         print(f"\n  Feature Importance (top 10):")
         fi = sorted(result['feature_importance'].items(), key=lambda x: -x[1])
+        max_val = max(abs(v) for _, v in fi) if fi else 1.0
+        scale = 35.0 / max_val if max_val > 0 else 1.0
         for name, imp in fi[:10]:
-            bar = "█" * int(imp * 50)
+            bar = "█" * max(1, int(abs(imp) * scale)) if abs(imp) > 0 else ""
             print(f"    {name:<25} {imp:.4f} {bar}")
+
+    if result.get('warnings'):
+        print(f"\n  ⚠ Model Validation Diagnostics & Alerts:")
+        for w in result['warnings']:
+            print(f"    • {w}")
+    elif result.get('cv_r2', 0) >= 0.5 and result.get('n_compounds', 0) >= 20:
+        print(f"\n  ✓ Model validation passed (q² >= 0.50, N >= 20). Satisfies standard QSAR criteria.")
 
     print(f"\n  Model saved successfully!")
 
@@ -371,7 +401,7 @@ def print_usage():
   COMMANDS:
 
     profile <SMILES>               Full physicochemical + drug-likeness profile
-    train <data.csv>               Train QSAR model from activity data
+    train <data.csv> [--model M]   Train QSAR model (random_forest, linear, ridge)
     predict <compounds.csv>        Predict activity + full profile
     substitute <SMILES_with_[*]>   Generate R-group substituted analogs
     bioisostere <SMILES>           Generate bioisosteric replacements
@@ -386,7 +416,9 @@ def print_usage():
   EXAMPLES:
 
     medchem profile 'c1ccccc1O'
-    medchem train data.csv
+    medchem train data.csv --model random_forest
+    medchem train data.csv --model linear
+    medchem train data.csv --model ridge
     medchem predict new_compounds.csv
     medchem substitute 'c1ccc([*])cc1'
     medchem bioisostere 'CC(=O)O'

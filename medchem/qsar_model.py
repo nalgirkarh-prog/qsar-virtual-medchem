@@ -149,6 +149,33 @@ def train_model(
         except Exception:
             pass
 
+    # Validation diagnostics (OECD / Golbraikh & Tropsha criteria)
+    warnings_list = []
+    if n_samples < 10:
+        warnings_list.append(
+            f"Critically small dataset (N={n_samples}). Machine learning QSAR models require at least 20-30+ diverse compounds for generalizable structure-activity learning."
+        )
+    elif n_samples < 20:
+        warnings_list.append(
+            f"Small dataset (N={n_samples}). Recommended minimum is 20-30+ compounds for reliable cross-validation."
+        )
+
+    # Topliss / rule of thumb: ratio of samples to features should be >= 5:1
+    ratio = n_samples / max(1, n_features)
+    if ratio < 5.0:
+        warnings_list.append(
+            f"High risk of chance correlation / overfitting: ratio of compounds to descriptors is {ratio:.1f}:1 (N={n_samples}, features={n_features}). The recommended guideline is >= 5:1 (Topliss operational criteria)."
+        )
+
+    if cv_r2 < 0:
+        warnings_list.append(
+            f"Statistical invalidity: CV R² is negative ({cv_r2:.4f}), meaning the model performs worse than predicting the mean activity baseline. Predictions from this model should NOT be used for decision making."
+        )
+    elif cv_r2 < 0.5:
+        warnings_list.append(
+            f"Low predictive power: CV R² ({cv_r2:.4f}) is below standard QSAR acceptability criteria (q² >= 0.50, Tropsha/Golbraikh threshold)."
+        )
+
     model_dict = {
         "model": pipeline,
         "features": features,
@@ -157,7 +184,8 @@ def train_model(
         "cv_mae": cv_mae,
         "feature_importance": feature_importance,
         "n_compounds": n_samples,
-        "model_type": model_type
+        "model_type": model_type,
+        "warnings": warnings_list
     }
 
     # Save to primary destination
