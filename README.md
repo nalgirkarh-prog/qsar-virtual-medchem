@@ -4,6 +4,49 @@ A comprehensive virtual medicinal chemistry platform built on RDKit and scikit-l
 
 ---
 
+## Installation
+
+### Option A — pip (any Python ≥ 3.9 with RDKit)
+
+```bash
+git clone https://github.com/nalgirkarh-prog/qsar-virtual-medchem.git
+cd qsar-virtual-medchem
+pip install -e .
+```
+
+> **Note:** RDKit must be installed first. The easiest way is via conda (see Option B).
+
+### Option B — conda (recommended)
+
+```bash
+git clone https://github.com/nalgirkarh-prog/qsar-virtual-medchem.git
+cd qsar-virtual-medchem
+
+conda env create -f environment.yml
+conda activate medchem-env
+pip install -e .
+```
+
+### Option C — manual (no pip install)
+
+```bash
+conda install -c conda-forge rdkit
+pip install scikit-learn pandas numpy scipy matplotlib joblib
+
+# Add the CLI alias to ~/.bashrc or ~/.zshrc:
+export QSAR_DIR="/path/to/qsar-virtual-medchem"
+alias medchem="python $QSAR_DIR/medchem/medchem_cli.py"
+source ~/.bashrc
+```
+
+### Verify installation
+
+```bash
+medchem profile "CC(=O)Oc1ccccc1C(=O)O"
+```
+
+---
+
 ## Key Capabilities
 
 ### 1. Molecular Property & Descriptor Calculator (`descriptors.py`)
@@ -67,12 +110,13 @@ Evaluates compounds against major medicinal chemistry filters:
 The unified CLI can be invoked via the `medchem` command or directly via Python:
 
 ```bash
-# Using the medchem CLI
+# Using the medchem CLI (after pip install -e .)
 medchem <command> [arguments]
 
-# Or using the conda environment Python directly
-/home/harshnalgirkar/miniconda3/envs/qsardb-env/bin/python /home/harshnalgirkar/qsar-setup/medchem/medchem_cli.py <command>
+# Or invoke directly without installing
+python medchem/medchem_cli.py <command>
 ```
+
 
 ### Commands
 
@@ -131,6 +175,87 @@ medchem constants -NO2
 ---
 
 ## Backward Compatibility
-Existing bash aliases continue to work without modification:
-- `qsar_model` runs `/home/harshnalgirkar/qsar-setup/qsar_model.py` (enhanced pipeline)
-- `predict_qsar` runs `/home/harshnalgirkar/qsar-setup/predict_new.py` (enhanced prediction)
+
+The root-level wrapper scripts continue to work for pre-existing workflows:
+
+```bash
+python qsar_model.py              # Train (calls medchem.qsar_model)
+python predict_new.py <SMILES>    # Predict (calls medchem.predict)
+```
+
+---
+
+## Python API
+
+```python
+from medchem import profile
+
+result = profile("CC(=O)Oc1ccccc1C(=O)O")
+print(result["descriptors"])
+print(result["druglikeness"])
+
+# Descriptor computation
+from medchem.descriptors import compute_all_descriptors
+desc = compute_all_descriptors("c1ccccc1")
+
+# Drug-likeness
+from medchem.druglikeness import full_druglikeness_profile
+dl = full_druglikeness_profile("CC(=O)Oc1ccccc1C(=O)O")
+
+# R-group enumeration
+from medchem.sar_engine import enumerate_rgroup_substitutions
+analogs = enumerate_rgroup_substitutions("c1ccc([*])cc1")
+
+# Bioisosteres
+from medchem.bioisosteres import generate_bioisosteric_analogs
+bioisosteres = generate_bioisosteric_analogs("CC(C)Cc1ccc(C(C)C(=O)O)cc1")
+```
+
+---
+
+## Project Structure
+
+```
+qsar-virtual-medchem/
+├── medchem/
+│   ├── __init__.py          # Package init & convenience API
+│   ├── descriptors.py       # 30+ molecular descriptors & fingerprints
+│   ├── druglikeness.py      # Lipinski, Veber, Ghose, Muegge, Egan, PAINS, Brenk
+│   ├── substituents.py      # Hammett/Hansch/Taft constants library (30 substituents)
+│   ├── sar_engine.py        # R-group enumeration, scaffold, MCS, MMP
+│   ├── bioisosteres.py      # Bioisosteric replacement engine (reaction SMARTS)
+│   ├── qsar_model.py        # ML QSAR pipeline (RF / Linear / Ridge)
+│   ├── predict.py           # Report generator
+│   ├── virtual_screen.py    # Virtual screening & comparison
+│   └── medchem_cli.py       # Unified 12-command CLI
+├── data/
+│   ├── training_data.csv    # Example training data
+│   └── substituent_library.csv
+├── models/                  # Saved QSAR model checkpoints
+├── qsar_model.py            # Backward-compatible wrapper (trains model)
+├── predict_new.py           # Backward-compatible wrapper (predicts)
+├── setup.py                 # Pip-installable package setup
+├── requirements.txt         # Pip dependencies
+├── environment.yml          # Conda environment spec
+└── LICENSE                  # MIT License
+```
+
+---
+
+## Dependencies
+
+| Package | Minimum Version | Purpose |
+|---|---|---|
+| `rdkit` | ≥ 2023.03 | Cheminformatics core |
+| `scikit-learn` | ≥ 1.3 | QSAR ML models |
+| `pandas` | ≥ 2.0 | Data handling |
+| `numpy` | ≥ 1.24 | Array computation |
+| `scipy` | ≥ 1.10 | Statistics |
+| `matplotlib` | ≥ 3.7 | Visualization |
+| `joblib` | ≥ 1.3 | Model serialization |
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
