@@ -124,7 +124,7 @@ python medchem/medchem_cli.py <command>
 |---|---|---|
 | `profile` | `medchem profile <SMILES>` | Full physicochemical + drug-likeness profile |
 | `train` | `medchem train <data.csv>` | Train QSAR model with CV and feature importance |
-| `predict` | `medchem predict <compounds.csv>` | Predict activity + generate drug-likeness profiles |
+| `predict` | `medchem predict <SMILES>` or `<compounds.csv>` | Predict activity + generate drug-likeness profiles |
 | `substitute` | `medchem substitute <core_[*]>` | Enumerate 30 R-group analogs, predict & rank |
 | `bioisostere` | `medchem bioisostere <SMILES>` | Generate bioisosteres & compare properties |
 | `sar` | `medchem sar <compounds.csv>` | Full SAR analysis, MCS, and Matched Molecular Pairs |
@@ -139,9 +139,43 @@ python medchem/medchem_cli.py <command>
 
 ## Examples
 
-### 1. Profiling a Drug Molecule
+### 1. Checking QSAR Activity for a New Compound
+
+#### Single Molecule (CLI):
+Pass any SMILES string directly to `medchem predict` or `medchem profile`:
 ```bash
+# Direct activity prediction + full medchem profile:
+medchem predict "CC(=O)Oc1ccccc1C(=O)O"
+
+# Or using the profile command:
 medchem profile "CC(=O)Oc1ccccc1C(=O)O"
+
+# Or using the wrapper script / alias:
+python predict_new.py "CC(=O)Oc1ccccc1C(=O)O"
+```
+**Output includes:**
+- **Predicted Activity** (from the trained QSAR model)
+- **30+ Physicochemical & Topological Descriptors** (MW, LogP, TPSA, HBD, HBA, RotBonds, Fsp3, Delaney LogS, QED)
+- **Drug-Likeness Filters** (Lipinski Ro5, Veber, Ghose, Muegge, Egan egg, PAINS)
+- **Structural Alerts & Warnings** (solubility risks, reactive groups, high flexibility)
+
+#### Batch Prediction from CSV (CLI):
+To predict activity for multiple compounds at once, prepare a CSV file with a `SMILES` column (e.g. `new_compounds.csv`):
+```bash
+# Predict for all compounds in CSV (saves to predictions_output.csv):
+medchem predict new_compounds.csv
+
+# Or specify a custom output filename:
+medchem predict new_compounds.csv custom_results.csv
+```
+
+#### In Python:
+```python
+from medchem.qsar_model import predict_activity
+
+# Predict activity for a list of SMILES:
+df = predict_activity(["CC(=O)Oc1ccccc1C(=O)O", "c1ccccc1O"])
+print(df[["SMILES", "Predicted_Activity", "MW", "LogP", "TPSA"]])
 ```
 
 ### 2. Virtual R-Group Screening on a Core Scaffold

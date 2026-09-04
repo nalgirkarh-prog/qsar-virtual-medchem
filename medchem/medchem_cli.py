@@ -80,15 +80,28 @@ def cmd_train(args):
 
 
 def cmd_predict(args):
-    """Predict activity for compounds in a CSV."""
+    """Predict activity for compounds in a CSV or a single SMILES."""
     if not args:
-        print("Usage: medchem predict <compounds.csv> [output.csv]")
+        print("Usage:")
+        print("  medchem predict <SMILES>                  Predict activity for a single compound")
+        print("  medchem predict <compounds.csv> [out.csv] Predict activity for a batch of compounds")
         return
-    from medchem.predict import predict_and_report
+    from medchem.predict import predict_and_report, generate_full_report, format_report_text
+    from medchem.qsar_model import load_model
 
-    input_csv = args[0]
-    output_csv = args[1] if len(args) > 1 else 'predictions_output.csv'
-    predict_and_report(input_csv, output_csv=output_csv)
+    target = args[0]
+    if os.path.isfile(target) or target.endswith('.csv'):
+        output_csv = args[1] if len(args) > 1 else 'predictions_output.csv'
+        predict_and_report(target, output_csv=output_csv)
+    else:
+        model_dict = None
+        try:
+            model_dict = load_model()
+        except FileNotFoundError:
+            pass
+        report = generate_full_report(target, model_dict=model_dict)
+        print(format_report_text(report))
+
 
 
 def cmd_substitute(args):
