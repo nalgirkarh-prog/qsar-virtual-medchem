@@ -192,6 +192,7 @@ def predict_and_report(input_csv: str, model_path: str = None,
         row = {'SMILES': r['smiles']}
         if 'error' not in r:
             row.update(r.get('descriptors', {}))
+            row['Activity'] = r.get('predicted_activity')
             row['Predicted_Activity'] = r.get('predicted_activity')
             dl = r.get('druglikeness', {})
             row['Lipinski_Pass'] = dl.get('lipinski', {}).get('pass')

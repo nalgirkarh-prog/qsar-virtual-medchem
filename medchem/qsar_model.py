@@ -258,6 +258,7 @@ def predict_activity(
         row = {"SMILES": smiles}
 
         if desc is None:
+            row["Activity"] = None
             row["Predicted_Activity"] = None
             row["Error"] = "Invalid SMILES"
             results.append(row)
@@ -280,15 +281,19 @@ def predict_activity(
             vector.append(val)
 
         if not valid:
+            row["Activity"] = None
             row["Predicted_Activity"] = None
             row["Error"] = "Missing required features"
         else:
             try:
                 feat_df = pd.DataFrame([vector], columns=features)
                 pred = pipeline.predict(feat_df)[0]
-                row["Predicted_Activity"] = float(pred)
+                pred_val = float(pred)
+                row["Activity"] = pred_val
+                row["Predicted_Activity"] = pred_val
                 row["Error"] = None
             except Exception as e:
+                row["Activity"] = None
                 row["Predicted_Activity"] = None
                 row["Error"] = str(e)
 

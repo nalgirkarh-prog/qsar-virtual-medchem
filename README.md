@@ -170,13 +170,15 @@ medchem predict new_compounds.csv
 medchem predict new_compounds.csv custom_results.csv
 ```
 
+> **Note:** Batch prediction CSV outputs include both `Activity` and `Predicted_Activity` columns, allowing prediction output files like `predictions_output.csv` to be passed directly into `medchem sar` for immediate SAR analysis.
+
 #### In Python:
 ```python
 from medchem.qsar_model import predict_activity
 
 # Predict activity for a list of SMILES:
 df = predict_activity(["CC(=O)Oc1ccccc1C(=O)O", "c1ccccc1O"])
-print(df[["SMILES", "Predicted_Activity", "MW", "LogP", "TPSA"]])
+print(df[["SMILES", "Activity", "Predicted_Activity", "MW", "LogP", "TPSA"]])
 ```
 
 ### 2. Training QSAR Models & Statistical Validation

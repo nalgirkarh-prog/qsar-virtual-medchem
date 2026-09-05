@@ -145,10 +145,14 @@ def virtual_substitution_screen(
         try:
             smiles_list = result_df['SMILES'].tolist()
             pred_df = predict_activity(smiles_list, model_dict=model_dict)
-            if not pred_df.empty and 'Predicted_Activity' in pred_df.columns:
-                result_df['Predicted_Activity'] = pred_df['Predicted_Activity'].values
+            if not pred_df.empty:
+                act_col = 'Activity' if 'Activity' in pred_df.columns else 'Predicted_Activity'
+                if act_col in pred_df.columns:
+                    result_df['Activity'] = pred_df[act_col].values
+                    result_df['Predicted_Activity'] = pred_df[act_col].values
         except Exception as e:
             print(f"  ⚠ Prediction failed: {e}")
+            result_df['Activity'] = np.nan
             result_df['Predicted_Activity'] = np.nan
 
     # Step 4: Rank
