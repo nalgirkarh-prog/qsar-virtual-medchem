@@ -3,7 +3,7 @@
 medchem_cli.py — Unified CLI for the Virtual MedChem Tool.
 
 Commands:
-    profile <SMILES>              Full physicochemical + drug-likeness profile
+    profile <SMILES> or <csv>     Full physicochemical + drug-likeness profile (single or CSV batch)
     train <data.csv>              Train QSAR model
     predict <compounds.csv>       Predict activity + full profile
     substitute <SMILES>           Generate R-group substituted analogs

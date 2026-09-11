@@ -123,7 +123,7 @@ python medchem/medchem_cli.py <command>
 
 | Command | Usage | Description |
 |---|---|---|
-| `profile` | `medchem profile <SMILES>` | Full physicochemical + drug-likeness profile |
+| `profile` | `medchem profile <SMILES>` or `<compounds.csv>` | Full physicochemical + drug-likeness profile (single or batch CSV) |
 | `train` | `medchem train <data.csv> [--model M]` | Train QSAR model (`random_forest`, `linear`, `ridge`) |
 | `predict` | `medchem predict <SMILES>` or `<compounds.csv>` | Predict activity + generate drug-likeness profiles |
 | `substitute` | `medchem substitute <core_[*]>` | Enumerate 30 R-group analogs, predict & rank |
@@ -160,10 +160,12 @@ python predict_new.py "CC(=O)Oc1ccccc1C(=O)O"
 - **Drug-Likeness Filters** (Lipinski Ro5, Veber, Ghose, Muegge, Egan egg, PAINS)
 - **Structural Alerts & Warnings** (solubility risks, reactive groups, high flexibility)
 
-#### Batch Prediction from CSV (CLI):
-To predict activity for multiple compounds at once, prepare a CSV file with a `SMILES` column (e.g. `new_compounds.csv`):
+#### Batch Profiling & Prediction from CSV (CLI):
+To predict activity and compute drug-likeness profiles for multiple compounds at once, prepare a CSV file with a `SMILES` column (e.g. `new_compounds.csv`):
 ```bash
-# Predict for all compounds in CSV (saves to predictions_output.csv):
+# Profile and predict for all compounds in CSV (saves to predictions_output.csv):
+medchem profile new_compounds.csv
+# or
 medchem predict new_compounds.csv
 
 # Or specify a custom output filename:
