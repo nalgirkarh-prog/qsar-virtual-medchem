@@ -25,14 +25,24 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def cmd_profile(args):
-    """Full medchem profile for a single SMILES."""
+    """Full medchem profile for a single SMILES or a CSV file."""
     if not args:
-        print("Usage: medchem profile <SMILES>")
+        print("Usage:")
+        print("  medchem profile <SMILES>                  Profile a single compound")
+        print("  medchem profile <compounds.csv> [out.csv] Profile a batch of compounds in CSV")
         return
+
+    target = args[0]
+    if os.path.isfile(target) or target.endswith('.csv'):
+        from medchem.predict import predict_and_report
+        output_csv = args[1] if len(args) > 1 else 'predictions_output.csv'
+        predict_and_report(target, output_csv=output_csv)
+        return
+
     from medchem.predict import generate_full_report, format_report_text
     from medchem.qsar_model import load_model
 
-    smiles = args[0]
+    smiles = target
     model_dict = None
     try:
         model_dict = load_model()
